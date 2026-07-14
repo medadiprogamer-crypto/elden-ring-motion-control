@@ -29,7 +29,7 @@ class EldenRingMotionControl:
         # موضعیت حرکتی قبلی
         self.prev_landmarks = None
         
-        # صاف‌��ردن حرکات
+        # صاف‌کردن حرکات
         self.smooth_camera = {'x': 0, 'y': 0}
         
         print("✅ سیستم آماده است!")
@@ -50,53 +50,64 @@ class EldenRingMotionControl:
             while True:
                 ret, frame = self.cap.read()
                 if not ret:
+                    print("⚠️ خطا در خواندن فریم از دوربین")
                     break
                 
-                # تشخیص وضعیت بدن
-                if self.pose_detector.detect_pose(frame):
+                try:
+                    # تشخیص وضعیت بدن
+                    if self.pose_detector.detect_pose(frame):
+                        
+                        # تشخیص حرکات
+                        movements = self.motion_detector.detect_movements()
+                        
+                        # تشخیص حرکت دوربین
+                        camera_movement = self.motion_detector.get_camera_movement()
+                        
+                        # صاف‌کردن حرکت دوربین
+                        self.smooth_camera['x'] = (
+                            MOTION_SMOOTH_FACTOR * self.smooth_camera['x'] +
+                            (1 - MOTION_SMOOTH_FACTOR) * camera_movement['x']
+                        )
+                        self.smooth_camera['y'] = (
+                            MOTION_SMOOTH_FACTOR * self.smooth_camera['y'] +
+                            (1 - MOTION_SMOOTH_FACTOR) * camera_movement['y']
+                        )
+                        
+                        # ارسال فرمان به gamepad
+                        try:
+                            self.gamepad.process_movements(movements, self.smooth_camera)
+                        except Exception as e:
+                            print(f"⚠️ خطا در gamepad: {e}")
+                        
+                        # نمایش اطلاعات
+                        if DISPLAY_SKELETON:
+                            frame = self.pose_detector.draw_landmarks(frame)
+                        
+                        if DISPLAY_ACTIONS:
+                            frame = self._draw_actions(frame, movements)
                     
-                    # تشخیص حرکات
-                    movements = self.motion_detector.detect_movements()
+                    # نمایش FPS
+                    if DISPLAY_FPS:
+                        frame = self._draw_fps(frame)
                     
-                    # تشخیص حرکت دوربین
-                    camera_movement = self.motion_detector.get_camera_movement()
+                    # نمایش فریم
+                    cv2.imshow('Elden Ring Motion Control', frame)
                     
-                    # صاف‌کردن حرکت دوربین
-                    self.smooth_camera['x'] = (
-                        MOTION_SMOOTH_FACTOR * self.smooth_camera['x'] +
-                        (1 - MOTION_SMOOTH_FACTOR) * camera_movement['x']
-                    )
-                    self.smooth_camera['y'] = (
-                        MOTION_SMOOTH_FACTOR * self.smooth_camera['y'] +
-                        (1 - MOTION_SMOOTH_FACTOR) * camera_movement['y']
-                    )
+                    # خروج
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        break
                     
-                    # ارسال فرمان به gamepad
-                    self.gamepad.process_movements(movements, self.smooth_camera)
+                    # به روز رسانی landmarks قبلی
+                    self.motion_detector.update_prev_landmarks()
                     
-                    # نمایش اطلاعات
-                    if DISPLAY_SKELETON:
-                        frame = self.pose_detector.draw_landmarks(frame)
-                    
-                    if DISPLAY_ACTIONS:
-                        frame = self._draw_actions(frame, movements)
-                
-                # نمایش FPS
-                if DISPLAY_FPS:
-                    frame = self._draw_fps(frame)
-                
-                # نمایش فریم
-                cv2.imshow('Elden Ring Motion Control', frame)
-                
-                # خروج
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
-                
-                # به روز رسانی landmarks قبلی
-                self.motion_detector.update_prev_landmarks()
+                except Exception as e:
+                    print(f"⚠️ خطا در حلقه اصلی: {e}")
+                    continue
                 
         except KeyboardInterrupt:
             print("\n⛔ متوقف شد...")
+        except Exception as e:
+            print(f"⚠️ خطای کلی: {e}")
         finally:
             self.cleanup()
     
@@ -110,7 +121,8 @@ class EldenRingMotionControl:
             self.frame_count = 0
             self.prev_time = current_time
         
-        cv2.putText(frame, f'FPS: {self.fps}', (10, 30),
+        fps_text = 'FPS: {}'.format(self.fps)
+        cv2.putText(frame, fps_text, (10, 30),
                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         return frame
     
@@ -120,23 +132,23 @@ class EldenRingMotionControl:
         
         actions = []
         if movements['walk']:
-            actions.append("🚶 راه رفتن")
+            actions.append("Walk")
         if movements['run']:
-            actions.append("🏃 دویدن")
+            actions.append("Run")
         if movements['jump']:
-            actions.append("🦘 پریدن")
+            actions.append("Jump")
         if movements['attack_light']:
-            actions.append("⚔️ حمله سبک")
+            actions.append("Light Attack")
         if movements['attack_heavy']:
-            actions.append("🗡️ حمله سنگین")
+            actions.append("Heavy Attack")
         if movements['dodge']:
-            actions.append("↩️ جاخالی دادن")
+            actions.append("Dodge")
         if movements['spell_cast']:
-            actions.append("✨ جادو")
+            actions.append("Spell")
         if movements['item_use']:
-            actions.append("🍗 آیتم")
+            actions.append("Item")
         if movements['pose']:
-            actions.append("🙏 Gesture")
+            actions.append("Gesture")
         
         for action in actions:
             cv2.putText(frame, action, (10, y_offset),
@@ -148,10 +160,13 @@ class EldenRingMotionControl:
     def cleanup(self):
         """تمیز‌کردن منابع"""
         print("\n🛑 بسته شدن...")
-        self.cap.release()
-        cv2.destroyAllWindows()
-        self.pose_detector.release()
-        self.gamepad.close()
+        try:
+            self.cap.release()
+            cv2.destroyAllWindows()
+            self.pose_detector.release()
+            self.gamepad.close()
+        except Exception as e:
+            print(f"⚠️ خطا در بسته شدن: {e}")
         print("✅ بسته شد")
 
 def main():
