@@ -39,8 +39,8 @@ class GamepadController:
             self.is_walking = True
         else:
             # توقف حرکت
-            self.gamepad.left_trigger_float(0.0)
-            self.gamepad.left_stick_float(0.0, 0.0)
+            self.gamepad.right_trigger_float(0.0)
+            self.gamepad.left_joystick_float(0.0, 0.0)
             self.is_running = False
             self.is_walking = False
         
@@ -66,7 +66,7 @@ class GamepadController:
         if movements['pose']:
             self._handle_pose()
         
-        # ��نترل دوربین
+        # کنترل دوربین
         self._handle_camera_movement(camera_movement)
         
         # ارسال input
@@ -75,13 +75,13 @@ class GamepadController:
     def _handle_walk(self):
         """راه رفتن - Stick چپ"""
         # استفاده از L3 (پایین trigger کردن چپ)
-        self.gamepad.left_stick_float(0.5, 0.5)  # حرکت جلو
-        self.gamepad.left_trigger_float(0.0)  # دویدن نیست
+        self.gamepad.left_joystick_float(0.5, 0.5)  # حرکت جلو
+        self.gamepad.right_trigger_float(0.0)  # دویدن نیست
     
     def _handle_run(self):
         """دویدن - راه رفتن + دویدن"""
-        self.gamepad.left_stick_float(0.5, 0.5)  # حرکت جلو
-        self.gamepad.left_trigger_float(1.0)  # دویدن (hold RT)
+        self.gamepad.left_joystick_float(0.5, 0.5)  # حرکت جلو
+        self.gamepad.right_trigger_float(1.0)  # دویدن (hold RT)
     
     def _handle_jump(self):
         """پریدن - دکمه Space (A)"""
@@ -153,7 +153,7 @@ class GamepadController:
             x = max(-1.0, min(1.0, camera_movement['x'] * 2))
             y = max(-1.0, min(1.0, camera_movement['y'] * 2))
             
-            self.gamepad.right_stick_float(x, y)
+            self.gamepad.right_joystick_float(x, y)
     
     def _check_cooldown(self, action):
         """بررسی cooldown برای یک action"""
@@ -176,9 +176,9 @@ class GamepadController:
         y = max(-1.0, min(1.0, y))
         
         if side == 'left':
-            self.gamepad.left_stick_float(x, y)
+            self.gamepad.left_joystick_float(x, y)
         elif side == 'right':
-            self.gamepad.right_stick_float(x, y)
+            self.gamepad.right_joystick_float(x, y)
         
         self.gamepad.update()
     
