@@ -86,63 +86,70 @@ class GamepadController:
     def _handle_jump(self):
         """پریدن - دکمه Space (A)"""
         if self._check_cooldown('jump'):
-            self.gamepad.press_button_toggle(vg.XUSB_BUTTON.XUSB_GAMEPAD_A, True)
+            self.gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
+            self.gamepad.update()
             time.sleep(0.05)
-            self.gamepad.press_button_toggle(vg.XUSB_BUTTON.XUSB_GAMEPAD_A, False)
+            self.gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
             self.gamepad.update()
             self.last_input_time['jump'] = time.time()
     
     def _handle_light_attack(self):
         """حمله سبک - X دکمه"""
         if self._check_cooldown('attack_light'):
-            self.gamepad.press_button_toggle(vg.XUSB_BUTTON.XUSB_GAMEPAD_X, True)
+            self.gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_X)
+            self.gamepad.update()
             time.sleep(0.1)
-            self.gamepad.press_button_toggle(vg.XUSB_BUTTON.XUSB_GAMEPAD_X, False)
+            self.gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_X)
             self.gamepad.update()
             self.last_input_time['attack_light'] = time.time()
     
     def _handle_heavy_attack(self):
         """حمله سنگین - Y دکمه"""
         if self._check_cooldown('attack_heavy'):
-            self.gamepad.press_button_toggle(vg.XUSB_BUTTON.XUSB_GAMEPAD_Y, True)
+            self.gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_Y)
+            self.gamepad.update()
             time.sleep(0.15)
-            self.gamepad.press_button_toggle(vg.XUSB_BUTTON.XUSB_GAMEPAD_Y, False)
+            self.gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_Y)
             self.gamepad.update()
             self.last_input_time['attack_heavy'] = time.time()
     
     def _handle_dodge(self):
         """جاخالی دادن - B دکمه"""
         if self._check_cooldown('dodge'):
-            self.gamepad.press_button_toggle(vg.XUSB_BUTTON.XUSB_GAMEPAD_B, True)
+            self.gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_B)
+            self.gamepad.update()
             time.sleep(0.05)
-            self.gamepad.press_button_toggle(vg.XUSB_BUTTON.XUSB_GAMEPAD_B, False)
+            self.gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_B)
             self.gamepad.update()
             self.last_input_time['dodge'] = time.time()
     
     def _handle_spell(self):
         """spell casting - RB دکمه"""
         if self._check_cooldown('spell'):
-            self.gamepad.press_button_toggle(vg.XUSB_BUTTON.XUSB_GAMEPAD_RB, True)
+            self.gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RB)
+            self.gamepad.update()
             time.sleep(0.1)
-            self.gamepad.press_button_toggle(vg.XUSB_BUTTON.XUSB_GAMEPAD_RB, False)
+            self.gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_RB)
             self.gamepad.update()
             self.last_input_time['spell'] = time.time()
     
     def _handle_item_use(self):
         """استفاده از آیتم - LB دکمه"""
         if self._check_cooldown('item'):
-            self.gamepad.press_button_toggle(vg.XUSB_BUTTON.XUSB_GAMEPAD_LB, True)
+            self.gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LB)
+            self.gamepad.update()
             time.sleep(0.1)
-            self.gamepad.press_button_toggle(vg.XUSB_BUTTON.XUSB_GAMEPAD_LB, False)
+            self.gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_LB)
             self.gamepad.update()
             self.last_input_time['item'] = time.time()
     
     def _handle_pose(self):
         """gesture/pose - START یا دکمه menu"""
         if self._check_cooldown('pose'):
-            self.gamepad.press_button_toggle(vg.XUSB_BUTTON.XUSB_GAMEPAD_START, True)
+            self.gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_START)
+            self.gamepad.update()
             time.sleep(0.1)
-            self.gamepad.press_button_toggle(vg.XUSB_BUTTON.XUSB_GAMEPAD_START, False)
+            self.gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_START)
             self.gamepad.update()
             self.last_input_time['pose'] = time.time()
     
@@ -165,9 +172,10 @@ class GamepadController:
     
     def press_button(self, button):
         """فشردن یک دکمه"""
-        self.gamepad.press_button_toggle(button, True)
+        self.gamepad.press_button(button)
+        self.gamepad.update()
         time.sleep(0.05)
-        self.gamepad.press_button_toggle(button, False)
+        self.gamepad.release_button(button)
         self.gamepad.update()
     
     def set_analog_stick(self, side, x, y):
